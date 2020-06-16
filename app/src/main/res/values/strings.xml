@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">ClientBLE</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="ble_servers">BLE Servers</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="messages">Messages</string>
+    <string name="send">Send</string>
+    <string name="request_timestamp">Request Timestamp</string>
+    <string name="scanning">Scanning</string>
+
+</resources>
