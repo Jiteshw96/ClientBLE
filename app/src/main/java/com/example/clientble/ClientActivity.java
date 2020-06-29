@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -29,22 +30,31 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 public class ClientActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
+    private CountDownTimer timer;
+    private Boolean timerRunning = false;
     private ScanCallback mScanCallback;
     private BluetoothGatt mGatt;
     TextView DeviceInfoTextView;
-    Button startScanning;
+    Button startScanning,refreshBtn;
     Button stopScanning;
     Button disconnect;
+    TextView receivedMsg;
     public ListView lv;
+    public Boolean register =  false;
     public List<BluetoothDevice> mDevices;
     boolean mEchoInitialized;
+    ClientApplication clientApplication;
     public static String SERVICE_STRING = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 
     public static String CHARACTERISTIC_ECHO_STRING = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
@@ -55,16 +65,30 @@ public class ClientActivity extends AppCompatActivity {
         mDevices = new ArrayList<BluetoothDevice>();
         DeviceInfoTextView = (TextView) findViewById(R.id.client_device_info_text_view);
         startScanning = (Button) findViewById(R.id.start_scanning_button);
+        receivedMsg = findViewById(R.id.msgReceived);
         stopScanning = (Button) findViewById(R.id.stop_scanning_button);
         disconnect = (Button) findViewById(R.id.disconnect_button);
+        refreshBtn = findViewById(R.id.refresh);
         EditText messageEditText = (EditText) findViewById(R.id.message_edit_text);
         Button send = (Button) findViewById(R.id.send_message_button);
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
+        refreshBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                receivedMsg.setText(clientApplication.getReceivedMsg());
+            }
+        });
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendMessage();
+                if (timerRunning) {
+                    timer.cancel();
+                    timer = null;
+                }
+                //resetConnection();
+                sendRepeatMessages();
+
             }
         });
         startScanning.setOnClickListener(new View.OnClickListener() {
@@ -82,7 +106,8 @@ public class ClientActivity extends AppCompatActivity {
         disconnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //disconnectGattServer();
+                resetConnection();
+
             }
         });
         lv = (ListView) findViewById(R.id.device_list);
@@ -92,12 +117,18 @@ public class ClientActivity extends AppCompatActivity {
                 Object o = lv.getItemAtPosition(i);
                 String device = o.toString();
                 connect(mDevices.get(i));
+
+
+              /*  BluetoothDevice macDevice = mBluetoothAdapter.getRemoteDevice("40:45:AD:3E:C1:35");
+                connect(macDevice);*/
                 /*Intent intent = new Intent(ClientActivity.this, ChatActivity.class);
                 startActivity(intent);*/
             }
         });
 
     }
+
+
 
     @Override
     protected void onResume() {
@@ -111,10 +142,14 @@ public class ClientActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mBroadcastReceiver3);
+        super.onDestroy();if(register){
+            unregisterReceiver(mBroadcastReceiver3);
+        }
+
         mBluetoothAdapter.cancelDiscovery();
         mGatt.disconnect();
+        timer.cancel();
+        timerRunning = false;
         mGatt.close();
     }
 
@@ -138,6 +173,7 @@ public class ClientActivity extends AppCompatActivity {
 
     private void startScan() {
         mBluetoothAdapter.startDiscovery();
+        register = true;
         IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(mBroadcastReceiver3, discoverDevicesIntent);
     }
@@ -168,7 +204,16 @@ public class ClientActivity extends AppCompatActivity {
 
 
     private void sendMessage() {
-        EditText messageEditText = (EditText) findViewById(R.id.message_edit_text);
+       // EditText messageEditText = (EditText) findViewById(R.id.message_edit_text);
+        Date timeStamp = Calendar.getInstance().getTime();
+        String[] parts = timeStamp.toString().split(" ");
+        String time = parts[3];
+
+
+        /*int hours = Calendar.get(Calendar.HOUR_OF_DAY);
+        int min = Calendar.get(Calendar.MINUTE);
+        int seconds = Calendar.get(Calendar.SECOND);*/
+
         BluetoothGattCharacteristic characteristic = BluetoothUtils.findEchoCharacteristic(mGatt);
         if (characteristic == null) {
             Log.i("Characteristic", "Unable to find echo characteristic.");
@@ -184,7 +229,19 @@ public class ClientActivity extends AppCompatActivity {
             return;
         }
 
-        String message = messageEditText.getText().toString();
+        String message = time;
+          //  message = "{ \"data\" : \"" + messageEditText.getText().toString()+"\"}";
+        /*    JSONObject obj = null;
+        try {
+
+             obj = new JSONObject(message);
+
+            Log.d("Json Message", obj.toString());
+
+        } catch (Throwable t) {
+            Log.e("My App", "Could not parse malformed JSON: \"" + message + "\"");
+        }*/
+        //{"data": "Edittext value"}
         Log.i("send", "Sending message: " + message);
 
         byte[] messageBytes = StringUtils.bytesFromString(message);
@@ -205,6 +262,7 @@ public class ClientActivity extends AppCompatActivity {
 
     public void initializeEcho() {
         mEchoInitialized = true;
+        sendMessage();
     }
 
     public BluetoothGattCallback mCallback = new BluetoothGattCallback() {
@@ -221,9 +279,11 @@ public class ClientActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             mGatt.discoverServices();
+
                         }
                     });
                     //gatt.discoverServices();
+
 
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     try
@@ -233,7 +293,7 @@ public class ClientActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(),"Connection unsuccessful",Toast.LENGTH_LONG).show();
                         //mGatt.disconnect();
                         mGatt.close();
-                    }
+                 }
                     catch(Exception e)
                     {
 
@@ -322,10 +382,63 @@ public class ClientActivity extends AppCompatActivity {
                 //logError("Unable to convert bytes to string");
                 return;
             }
+            clientApplication = (ClientApplication) getApplicationContext();
 
             Log.i("Received", "Received message: " + message);
+            clientApplication.setReceivedMsg(message);
+
+
         }
     };
+
+
+
+
+    private void sendRepeatMessages(){
+
+        timerRunning = true;
+        timer = new CountDownTimer(300000, 20000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                sendMessage();
+            }
+
+            @Override
+            public void onFinish() {
+                try{
+                    startTimerAgain();
+                }catch(Exception e){
+                    Log.e("Error", "Error: " + e.toString());
+                }
+            }
+        }.start();
+    }
+
+    private void startTimerAgain(){
+
+        timer.start();
+    }
+
+    private void resetConnection(){
+        if(register){
+            unregisterReceiver(mBroadcastReceiver3);
+        }
+        mBluetoothAdapter.cancelDiscovery();
+        mGatt.disconnect();
+        timer.cancel();
+        timerRunning = false;
+        mGatt.close();
+        mBluetoothAdapter = null;
+
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+
+    }
+
+
+
+
 
 
 }

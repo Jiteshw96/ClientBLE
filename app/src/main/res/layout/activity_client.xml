@@ -94,8 +94,31 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/send"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:textSize="22sp"
+                android:text="Message: -"/>
+            <TextView
+                android:id="@+id/msgReceived"
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"/>
+            <Button
+                android:id="@+id/refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Refresh" />
 
         </LinearLayout>
+
         <ListView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
