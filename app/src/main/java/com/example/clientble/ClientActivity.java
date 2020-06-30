@@ -50,6 +50,7 @@ public class ClientActivity extends AppCompatActivity {
     Button stopScanning;
     Button disconnect;
     TextView receivedMsg;
+    EditText messageEditText;
     public ListView lv;
     public Boolean register =  false;
     public List<BluetoothDevice> mDevices;
@@ -69,10 +70,11 @@ public class ClientActivity extends AppCompatActivity {
         stopScanning = (Button) findViewById(R.id.stop_scanning_button);
         disconnect = (Button) findViewById(R.id.disconnect_button);
         refreshBtn = findViewById(R.id.refresh);
-        EditText messageEditText = (EditText) findViewById(R.id.message_edit_text);
+        messageEditText = (EditText) findViewById(R.id.message_edit_text);
         Button send = (Button) findViewById(R.id.send_message_button);
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
+        clientApplication = (ClientApplication) getApplicationContext();
         refreshBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -82,12 +84,14 @@ public class ClientActivity extends AppCompatActivity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (timerRunning) {
+               /* if (timerRunning) {
                     timer.cancel();
                     timer = null;
-                }
+                }*/
+                String message = messageEditText.getText().toString();
+               clientApplication.setSendMsg(message);
                 //resetConnection();
-                sendRepeatMessages();
+               // sendRepeatMessages();
 
             }
         });
@@ -115,8 +119,10 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Object o = lv.getItemAtPosition(i);
-                String device = o.toString();
-                connect(mDevices.get(i));
+                clientApplication.setDeviceAddress(mDevices.get(i).getAddress());
+                sendRepeatMessages();
+               // String device = o.toString();
+               // connect(mDevices.get(i));
 
 
               /*  BluetoothDevice macDevice = mBluetoothAdapter.getRemoteDevice("40:45:AD:3E:C1:35");
@@ -184,10 +190,10 @@ public class ClientActivity extends AppCompatActivity {
 
     /*private void requestBluetoothEnable() {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        startActivityForResullt(enableBtIntent, REQUEST_ENABLE_BT);
     }*/
 
-    private void connect(BluetoothDevice device) {
+   /* private void connect(BluetoothDevice device) {
         //mGatt = device.connectGatt(this, true, mCallback);
         final BluetoothDevice device1 = device;
         Handler handler = new Handler(Looper.getMainLooper());
@@ -200,19 +206,19 @@ public class ClientActivity extends AppCompatActivity {
                 }
             }
         });
-    }
+    }*/
 
 
-    private void sendMessage() {
+   /* private void sendMessage() {
        // EditText messageEditText = (EditText) findViewById(R.id.message_edit_text);
         Date timeStamp = Calendar.getInstance().getTime();
         String[] parts = timeStamp.toString().split(" ");
         String time = parts[3];
 
 
-        /*int hours = Calendar.get(Calendar.HOUR_OF_DAY);
+        *//*int hours = Calendar.get(Calendar.HOUR_OF_DAY);
         int min = Calendar.get(Calendar.MINUTE);
-        int seconds = Calendar.get(Calendar.SECOND);*/
+        int seconds = Calendar.get(Calendar.SECOND);*//*
 
         BluetoothGattCharacteristic characteristic = BluetoothUtils.findEchoCharacteristic(mGatt);
         if (characteristic == null) {
@@ -231,7 +237,7 @@ public class ClientActivity extends AppCompatActivity {
 
         String message = time;
           //  message = "{ \"data\" : \"" + messageEditText.getText().toString()+"\"}";
-        /*    JSONObject obj = null;
+        *//*    JSONObject obj = null;
         try {
 
              obj = new JSONObject(message);
@@ -240,7 +246,7 @@ public class ClientActivity extends AppCompatActivity {
 
         } catch (Throwable t) {
             Log.e("My App", "Could not parse malformed JSON: \"" + message + "\"");
-        }*/
+        }*//*
         //{"data": "Edittext value"}
         Log.i("send", "Sending message: " + message);
 
@@ -264,8 +270,8 @@ public class ClientActivity extends AppCompatActivity {
         mEchoInitialized = true;
         sendMessage();
     }
-
-    public BluetoothGattCallback mCallback = new BluetoothGattCallback() {
+*/
+   /* public BluetoothGattCallback mCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
@@ -300,11 +306,11 @@ public class ClientActivity extends AppCompatActivity {
                     }
                 }
             }
-            /*else {
+            *//*else {
                 //final int finalStatus = status;
                 //Toast.makeText(ClientActivity.this, "Error!", Toast.LENGTH_SHORT).show();
 
-            }*/
+            }*//*
         }
 
         @Override
@@ -391,17 +397,16 @@ public class ClientActivity extends AppCompatActivity {
         }
     };
 
-
+*/
 
 
     private void sendRepeatMessages(){
-
         timerRunning = true;
         timer = new CountDownTimer(300000, 20000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
-                sendMessage();
+                startClientService();
             }
 
             @Override
@@ -437,7 +442,18 @@ public class ClientActivity extends AppCompatActivity {
     }
 
 
+    private void startClientService(){
+        Intent serviceIntent = new Intent(this,ClientService.class);
+        serviceIntent.putExtra("message", "Test");
+        startService(serviceIntent);
 
+    }
+
+    private void stopClientService(){
+        Intent  serviceIntent = new Intent(this,ClientService.class);
+        stopService(serviceIntent);
+
+    }
 
 
 
