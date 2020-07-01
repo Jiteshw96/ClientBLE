@@ -120,7 +120,7 @@ public class ClientActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Object o = lv.getItemAtPosition(i);
                 clientApplication.setDeviceAddress(mDevices.get(i).getAddress());
-                sendRepeatMessages();
+                startClientService();
                // String device = o.toString();
                // connect(mDevices.get(i));
 
@@ -148,7 +148,8 @@ public class ClientActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();if(register){
+        super.onDestroy();
+       /* if(register){
             unregisterReceiver(mBroadcastReceiver3);
         }
 
@@ -156,7 +157,7 @@ public class ClientActivity extends AppCompatActivity {
         mGatt.disconnect();
         timer.cancel();
         timerRunning = false;
-        mGatt.close();
+        mGatt.close();*/
     }
 
     private BroadcastReceiver mBroadcastReceiver3 = new BroadcastReceiver() {
@@ -399,31 +400,6 @@ public class ClientActivity extends AppCompatActivity {
 
 */
 
-
-    private void sendRepeatMessages(){
-        timerRunning = true;
-        timer = new CountDownTimer(300000, 20000) {
-
-            @Override
-            public void onTick(long millisUntilFinished) {
-                startClientService();
-            }
-
-            @Override
-            public void onFinish() {
-                try{
-                    startTimerAgain();
-                }catch(Exception e){
-                    Log.e("Error", "Error: " + e.toString());
-                }
-            }
-        }.start();
-    }
-
-    private void startTimerAgain(){
-
-        timer.start();
-    }
 
     private void resetConnection(){
         if(register){
