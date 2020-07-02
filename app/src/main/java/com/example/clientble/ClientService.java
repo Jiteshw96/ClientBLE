@@ -52,8 +52,7 @@ public class ClientService extends Service {
         Intent notificationIntent = new Intent(this,ClientActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
         Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID)
-                .setContentTitle("Server Service")
-                .setContentText("Test")
+                .setContentTitle("Client Service")
                 .setSmallIcon(R.drawable.ic_android)
                 .setContentIntent(pendingIntent)
                 .build();
@@ -107,8 +106,12 @@ public class ClientService extends Service {
             return;
         }
 
-       // String message = time;
-        String message = clientApplication.getSendMsg()+" "+ time +" " +android.os.Build.MODEL;
+       // String message = time
+        String clientMessage = clientApplication.getSendMsg().replace(" ", "");
+        if(clientMessage == ""){
+            clientMessage = "test";
+        }
+        String message = time +" "+ clientMessage+" "+android.os.Build.MODEL.replace(" ","") +" "+clientApplication.getMacAddress();
         //  message = "{ \"data\" : \"" + messageEditText.getText().toString()+"\"}";
         /*    JSONObject obj = null;
         try {
@@ -194,7 +197,10 @@ public class ClientService extends Service {
                 Log.i("Not success", "Device service discovery unsuccessful, status " + status);
                 return;
             }
-            //List<BluetoothGattService> matchingServices = gatt.getServices();
+
+            if(status == BluetoothGatt.GATT_SUCCESS){
+                gatt.getService(UUID.fromString(SERVICE_STRING));
+            }            //List<BluetoothGattService> matchingServices = gatt.getServices();
             gatt.getService(UUID.fromString(SERVICE_STRING));
             //Check error here
             List<BluetoothGattCharacteristic> matchingCharacteristics = BluetoothUtils.findCharacteristics(gatt);

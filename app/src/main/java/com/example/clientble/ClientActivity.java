@@ -1,6 +1,7 @@
 package com.example.clientble;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -16,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -421,7 +423,12 @@ public class ClientActivity extends AppCompatActivity {
     private void startClientService(){
         Intent serviceIntent = new Intent(this,ClientService.class);
         serviceIntent.putExtra("message", "Test");
-        startService(serviceIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ContextCompat.startForegroundService(this, serviceIntent);
+        }
+        else{
+            startService(serviceIntent);
+        }
 
     }
 
