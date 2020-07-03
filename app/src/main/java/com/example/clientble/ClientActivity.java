@@ -3,6 +3,7 @@ package com.example.clientble;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -47,7 +48,7 @@ public class ClientActivity extends AppCompatActivity {
     private Boolean timerRunning = false;
     private ScanCallback mScanCallback;
     private BluetoothGatt mGatt;
-    TextView DeviceInfoTextView;
+    TextView DeviceInfoTextView,status;
     Button startScanning,refreshBtn;
     Button stopScanning;
     Button disconnect;
@@ -69,6 +70,7 @@ public class ClientActivity extends AppCompatActivity {
         DeviceInfoTextView = (TextView) findViewById(R.id.client_device_info_text_view);
         startScanning = (Button) findViewById(R.id.start_scanning_button);
         receivedMsg = findViewById(R.id.msgReceived);
+        status = findViewById(R.id.status);
         stopScanning = (Button) findViewById(R.id.stop_scanning_button);
         disconnect = (Button) findViewById(R.id.disconnect_button);
         refreshBtn = findViewById(R.id.refresh);
@@ -81,6 +83,7 @@ public class ClientActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 receivedMsg.setText(clientApplication.getReceivedMsg());
+                status.setText(clientApplication.getStatus());
             }
         });
         send.setOnClickListener(new View.OnClickListener() {
@@ -421,6 +424,10 @@ public class ClientActivity extends AppCompatActivity {
 
 
     private void startClientService(){
+
+        if(isMyServiceRunning(ClientService.class)){
+            stopClientService();
+        }
         Intent serviceIntent = new Intent(this,ClientService.class);
         serviceIntent.putExtra("message", "Test");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -439,5 +446,14 @@ public class ClientActivity extends AppCompatActivity {
     }
 
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

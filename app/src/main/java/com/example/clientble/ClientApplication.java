@@ -22,6 +22,17 @@ public class ClientApplication extends Application {
     public static final String CHANNEL_ID = "serverService";
     private String receivedMsg = "";
 
+    public String getStatus() {
+        return Status;
+    }
+
+    public void setStatus(String status) {
+        Status = status;
+    }
+
+    private String Status = " ";
+
+
     public String getMacAddress() {
         return macAddress;
     }

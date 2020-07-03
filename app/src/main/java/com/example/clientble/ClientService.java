@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
@@ -27,6 +28,7 @@ import java.util.UUID;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import static android.content.ContentValues.TAG;
 import static com.example.clientble.ClientApplication.CHANNEL_ID;
 
 public class ClientService extends Service {
@@ -151,6 +153,7 @@ public class ClientService extends Service {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
+            clientApplication = (ClientApplication) getApplicationContext();
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -165,6 +168,7 @@ public class ClientService extends Service {
                         }
                     });
                     //gatt.discoverServices();
+                    clientApplication.setStatus("Connected");
 
 
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -174,6 +178,7 @@ public class ClientService extends Service {
                         Log.i("no_conn", "Connection unsuccessful with status"+status);
                         Toast.makeText(getApplicationContext(),"Connection unsuccessful",Toast.LENGTH_LONG).show();
                         //mGatt.disconnect();
+                        clientApplication.setStatus("Disconnected");
                         mGatt.close();
                     }
                     catch(Exception e)
@@ -197,11 +202,18 @@ public class ClientService extends Service {
                 Log.i("Not success", "Device service discovery unsuccessful, status " + status);
                 return;
             }
+            String uuid = gatt.getServices().get(0).getUuid().toString();
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                for (BluetoothGattService gattService : gatt.getServices()) {
+                    Log.i(TAG, "Service UUID Found: " + gattService.getUuid().toString());
+                }
+            }
 
-            if(status == BluetoothGatt.GATT_SUCCESS){
-                gatt.getService(UUID.fromString(SERVICE_STRING));
-            }            //List<BluetoothGattService> matchingServices = gatt.getServices();
-            gatt.getService(UUID.fromString(SERVICE_STRING));
+         //  gatt.getService(UUID.fromString(SERVICE_STRING));
+
+            Log.i("Get Service",gatt.getService(UUID.fromString(uuid)).toString());
+            gatt.getService(UUID.fromString(uuid));
+
             //Check error here
             List<BluetoothGattCharacteristic> matchingCharacteristics = BluetoothUtils.findCharacteristics(gatt);
             if (matchingCharacteristics.isEmpty()) {
@@ -218,7 +230,7 @@ public class ClientService extends Service {
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            // super.onCharacteristicWrite(gatt, characteristic, status);
+             super.onCharacteristicWrite(gatt, characteristic, status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i("Write successful", "Characteristic written successfully");
             } else {
@@ -285,6 +297,18 @@ public class ClientService extends Service {
 
             @Override
             public void onTick(long millisUntilFinished) {
+
+                if(mGatt!=null) {
+                  try {
+                     mGatt.disconnect();
+                     mGatt.close();
+                     Thread.sleep(100);
+                  }
+                  catch(Exception e)
+                  {
+                      Log.e("Error", "Error: " + e.toString());
+                  }
+                }
                 connect(macDevice);
             }
 
@@ -297,6 +321,12 @@ public class ClientService extends Service {
                 }
             }
         }.start();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        timer.cancel();
     }
 
     private void startTimerAgain(){
