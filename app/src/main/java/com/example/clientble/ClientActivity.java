@@ -7,10 +7,7 @@ import android.app.ActivityManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.content.BroadcastReceiver;
@@ -18,12 +15,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -33,13 +28,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 public class ClientActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
@@ -49,24 +39,27 @@ public class ClientActivity extends AppCompatActivity {
     private ScanCallback mScanCallback;
     private BluetoothGatt mGatt;
     TextView DeviceInfoTextView,status;
-    Button startScanning,refreshBtn;
-    Button stopScanning;
-    Button disconnect;
+    Button startScanning,refreshBtn,stopScanning,disconnect,showMessage;
     TextView receivedMsg;
     EditText messageEditText;
-    public ListView lv;
+    public ListView lv, messageListView;
     public Boolean register =  false;
     public List<BluetoothDevice> mDevices;
+    public List<String> mDevicesName;
     boolean mEchoInitialized;
+    ArrayList<String>  messageList;
     ClientApplication clientApplication;
-    public static String SERVICE_STRING = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    AppDatabase db;
+   // public static String SERVICE_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41800";
+   public static String SERVICE_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41800";
 
-    public static String CHARACTERISTIC_ECHO_STRING = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+    public static String CHARACTERISTIC_ECHO_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41801";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_client);
         mDevices = new ArrayList<BluetoothDevice>();
+        mDevicesName = new ArrayList<String>();
         DeviceInfoTextView = (TextView) findViewById(R.id.client_device_info_text_view);
         startScanning = (Button) findViewById(R.id.start_scanning_button);
         receivedMsg = findViewById(R.id.msgReceived);
@@ -74,11 +67,13 @@ public class ClientActivity extends AppCompatActivity {
         stopScanning = (Button) findViewById(R.id.stop_scanning_button);
         disconnect = (Button) findViewById(R.id.disconnect_button);
         refreshBtn = findViewById(R.id.refresh);
+        showMessage =  findViewById(R.id.show_message);
         messageEditText = (EditText) findViewById(R.id.message_edit_text);
         Button send = (Button) findViewById(R.id.send_message_button);
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
         clientApplication = (ClientApplication) getApplicationContext();
+        db= (AppDatabase) AppDatabase.getAppDatabase(ClientActivity.this);
         refreshBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,6 +98,8 @@ public class ClientActivity extends AppCompatActivity {
         startScanning.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mDevices = new ArrayList<>();
+                mDevicesName = new ArrayList<>();
                 startScan();
             }
         });
@@ -120,6 +117,9 @@ public class ClientActivity extends AppCompatActivity {
             }
         });
         lv = (ListView) findViewById(R.id.device_list);
+
+         messageList= new ArrayList<String>();
+        messageListView = findViewById(R.id.message_list);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -134,6 +134,15 @@ public class ClientActivity extends AppCompatActivity {
                 connect(macDevice);*/
                 /*Intent intent = new Intent(ClientActivity.this, ChatActivity.class);
                 startActivity(intent);*/
+            }
+        });
+
+        showMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                new getAll().execute(db);
+
             }
         });
 
@@ -175,8 +184,9 @@ public class ClientActivity extends AppCompatActivity {
 
                 if(device!=null)
                     mDevices.add(device);
+                    mDevicesName.add(device.getName());
 
-                lv.setAdapter(new ArrayAdapter<BluetoothDevice>(ClientActivity.this, android.R.layout.simple_list_item_1, mDevices));
+                lv.setAdapter(new ArrayAdapter<String>(ClientActivity.this, android.R.layout.simple_list_item_1, mDevicesName));
                 //ArrayAdapter<BluetoothDevice> arrayAdapter = new ArrayAdapter(ClientActivity.this, android.R.layout.simple_list_item_1, mDevices);
             }
         }
@@ -455,5 +465,28 @@ public class ClientActivity extends AppCompatActivity {
         }
         return false;
     }
+
+    class getAll extends AsyncTask<AppDatabase, Void, Void> {
+
+        List<BleDataFromClient> bleDataFromClientslist;
+
+        @Override
+        protected Void doInBackground(AppDatabase... db) {
+            bleDataFromClientslist=new ArrayList<BleDataFromClient>();
+            bleDataFromClientslist.addAll(db[0].userDao().getAll());
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            ListAdapter listAdapter = new ListAdapter(ClientActivity.this,bleDataFromClientslist);
+            messageListView.setAdapter(listAdapter);
+            listAdapter.notifyDataSetChanged();
+        }
+    }
+
+
+
 
 }

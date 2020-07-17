@@ -18,9 +18,9 @@ import androidx.annotation.Nullable;
 
 public class BluetoothUtils {
 
-    public static String SERVICE_STRING = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-
-    public static String CHARACTERISTIC_ECHO_STRING = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+   // public static String SERVICE_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41800";
+        public static String SERVICE_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41800";
+        public static String CHARACTERISTIC_ECHO_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41801";
     public static List<BluetoothGattCharacteristic> findCharacteristics(BluetoothGatt bluetoothGatt) {
         List<BluetoothGattCharacteristic> matchingCharacteristics = new ArrayList<>();
 

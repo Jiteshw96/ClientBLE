@@ -14,7 +14,12 @@ import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
+
+import java.net.NetworkInterface;
+import java.util.Collections;
+import java.util.List;
 
 import androidx.core.app.NotificationCompat;
 
@@ -54,7 +59,6 @@ public class ClientApplication extends Application {
     private String sendMsg = " ";
 
 
-
     public String getDeviceAddress() {
         return deviceAddress;
     }
@@ -77,12 +81,14 @@ public class ClientApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        String macAddress = android.provider.Settings.Secure.getString(getApplicationContext().getContentResolver(), "bluetooth_address");
+       // String macAddress = android.provider.Settings.Secure.getString(getApplicationContext().getContentResolver(), "bluetooth_address");
+        String macAddress = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
         setMacAddress(macAddress);
         createNotificationChannel();
     }
-    private  void createNotificationChannel(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
@@ -95,5 +101,32 @@ public class ClientApplication extends Application {
         }
     }
 
+   /* public static String getMacAddr() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return "";
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(Integer.toHexString(b & 0xFF) + ":");
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {
+
+        }
+
+        return "02:00:00:00:00:00";
+    }*/
 
 }

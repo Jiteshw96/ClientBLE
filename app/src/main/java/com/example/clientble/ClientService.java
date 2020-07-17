@@ -17,6 +17,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -38,8 +39,10 @@ public class ClientService extends Service {
     boolean mEchoInitialized;
     ClientApplication clientApplication;
     private CountDownTimer timer;
+    AppDatabase db;
     private Boolean timerRunning = false;
-    public static String SERVICE_STRING = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+   // public static String SERVICE_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41800";
+    public static String SERVICE_STRING = "18902a9a-1f4a-44fe-936f-14c8eea41800";
 
 
     @Override
@@ -49,8 +52,7 @@ public class ClientService extends Service {
         mBluetoothAdapter = bluetoothManager.getAdapter();
         clientApplication = (ClientApplication) getApplicationContext();
         BluetoothDevice macDevice = mBluetoothAdapter.getRemoteDevice(clientApplication.getDeviceAddress());
-
-
+        db= (AppDatabase) AppDatabase.getAppDatabase(getApplicationContext());
         Intent notificationIntent = new Intent(this,ClientActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
         Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID)
@@ -111,9 +113,13 @@ public class ClientService extends Service {
        // String message = time
         String clientMessage = clientApplication.getSendMsg().replace(" ", "");
         if(clientMessage == ""){
-            clientMessage = "test";
+            clientMessage = "Test";
         }
-        String message = time +" "+ clientMessage+" "+android.os.Build.MODEL.replace(" ","") +" "+clientApplication.getMacAddress();
+      //  String deviceName = android.os.Build.MODEL.replace(" ","");
+        String deviceName =  mBluetoothAdapter.getName();
+
+        String message = time +" "+ clientMessage+" "+ deviceName +" "+clientApplication.getMacAddress();
+
         //  message = "{ \"data\" : \"" + messageEditText.getText().toString()+"\"}";
         /*    JSONObject obj = null;
         try {
@@ -127,6 +133,14 @@ public class ClientService extends Service {
         }*/
         //{"data": "Edittext value"}
         Log.i("send", "Sending message: " + message);
+
+        BleDataFromClient bleDataFromClient= new BleDataFromClient();
+        bleDataFromClient.setDevicename(deviceName);
+        bleDataFromClient.setMessage(clientMessage);
+        bleDataFromClient.setTime(time);
+        bleDataFromClient.setDevicemacaddress(clientApplication.getMacAddress());
+        bleDataFromClient.setStatus("0");
+        db.userDao().insertAll(bleDataFromClient);
 
         byte[] messageBytes = StringUtils.bytesFromString(message);
         if (messageBytes.length == 0) {
@@ -160,6 +174,7 @@ public class ClientService extends Service {
                     final BluetoothGatt mGatt = gatt;
                     Handler handler;
                     handler = new Handler(Looper.getMainLooper());
+
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -281,7 +296,17 @@ public class ClientService extends Service {
             clientApplication = (ClientApplication) getApplicationContext();
 
             Log.i("Received", "Received message: " + message);
+            String[] parts= message.split(" ");
+
+            BleDataFromClient bleDataFromClient= new BleDataFromClient();
+            bleDataFromClient.setDevicename(parts[2]);
+            bleDataFromClient.setMessage(parts[1]);
+            bleDataFromClient.setTime(parts[0]);
+            bleDataFromClient.setDevicemacaddress(parts[3]);
+            bleDataFromClient.setStatus("1");
+            db.userDao().insertAll(bleDataFromClient);
             clientApplication.setReceivedMsg(message);
+
           //  mBluetoothAdapter.cancelDiscovery();
           //  mGatt.disconnect();
             // mGatt.close();

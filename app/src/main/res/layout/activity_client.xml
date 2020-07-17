@@ -78,6 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="status"
+            android:visibility="gone"
             android:textAlignment="center"/>
 
         <LinearLayout
@@ -107,24 +108,41 @@
                 android:layout_width="wrap_content"
                 android:layout_height="30dp"
                 android:textSize="22sp"
+                android:visibility="gone"
                 android:text="Message: -"/>
             <TextView
                 android:id="@+id/msgReceived"
                 android:layout_weight="1"
                 android:layout_width="wrap_content"
+                android:visibility="gone"
                 android:layout_height="30dp"/>
             <Button
                 android:id="@+id/refresh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:text="Refresh" />
 
         </LinearLayout>
 
         <ListView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="200dp"
             android:id="@+id/device_list" />
+        <Button
+            android:id="@+id/show_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Show Messages"
+            android:textSize="12sp"
+            android:layout_gravity="center"
+            />
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/message_list"
+            android:layout_marginTop="10dp"/>
     </LinearLayout>
 
 </RelativeLayout>

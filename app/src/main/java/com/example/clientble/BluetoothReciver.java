@@ -15,7 +15,7 @@ public class BluetoothReciver extends BroadcastReceiver {
 
         clientApplication = (ClientApplication) context.getApplicationContext();
         String action = intent.getAction();
-        Log.d("BroadcastActions", "Action "+action+"received");
+       // Log.d("BroadcastActions", "Action "+action+"received");
         int state;
         BluetoothDevice bluetoothDevice;
 
@@ -25,37 +25,37 @@ public class BluetoothReciver extends BroadcastReceiver {
                 state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
                 if (state == BluetoothAdapter.STATE_OFF)
                 {
-                    clientApplication.setStatus("Disconnected");
-                    Toast.makeText(context, "Bluetooth is off", Toast.LENGTH_SHORT).show();
+                    //clientApplication.setStatus("Disconnected");
+                  /*  Toast.makeText(context, "Bluetooth is off", Toast.LENGTH_SHORT).show();
                     Log.d("BroadcastActions", "Bluetooth is off");
-
+*/
 
                     //Intent serviceIntent = new Intent(context, BleTestService.class);
                     //context.stopService(serviceIntent);
                 }
                 else if (state == BluetoothAdapter.STATE_TURNING_OFF)
                 {
-                    Toast.makeText(context, "Bluetooth is turning off", Toast.LENGTH_SHORT).show();
-                    Log.d("BroadcastActions", "Bluetooth is turning off");
+                   /* Toast.makeText(context, "Bluetooth is turning off", Toast.LENGTH_SHORT).show();
+                    Log.d("BroadcastActions", "Bluetooth is turning off");*/
                 }
                 else if(state == BluetoothAdapter.STATE_ON)
                 {
-                    Log.d("BroadcastActions", "Bluetooth is on");
-                    Toast.makeText(context, "Bluetooth is turning on", Toast.LENGTH_SHORT).show();
+                  /*  Log.d("BroadcastActions", "Bluetooth is on");
+                    Toast.makeText(context, "Bluetooth is turning on", Toast.LENGTH_SHORT).show();*/
                 }
                 break;
 
             case BluetoothDevice.ACTION_ACL_CONNECTED:
                 bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Toast.makeText(context, "Connected to "+bluetoothDevice.getName(),
-                        Toast.LENGTH_SHORT).show();
-                Log.d("BroadcastActions", "Connected to "+bluetoothDevice.getName());
+//                Toast.makeText(context, "Connected to "+bluetoothDevice.getName(),
+//                        Toast.LENGTH_SHORT).show();
+//                Log.d("BroadcastActions", "Connected to "+bluetoothDevice.getName());
                 break;
 
             case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                 bluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Toast.makeText(context, "Disconnected from "+bluetoothDevice.getName(),
-                        Toast.LENGTH_SHORT).show();
+               /* Toast.makeText(context, "Disconnected from "+bluetoothDevice.getName(),
+                        Toast.LENGTH_SHORT).show();*/
                 break;
         }
     }
